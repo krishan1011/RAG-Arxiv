@@ -1,93 +1,142 @@
-<div align="center">
+# RAG-Arxiv
 
-# Arxiv / rag
+A FastAPI-based research assistant for ArXiv papers with local vector search, reranking, and an agentic query workflow.
 
-### Talk to research papers. Actually understand them.
+## Overview
 
-[![Live Demo](https://img.shields.io/badge/Live%20Demo-agentic--arxiv.vercel.app-6366f1?style=flat-square)](https://agentic-arxiv.vercel.app)
-[![FastAPI](https://img.shields.io/badge/FastAPI-backend-009688?style=flat-square&logo=fastapi&logoColor=white)](https://fastapi.tiangolo.com)
-[![License: MIT](https://img.shields.io/badge/License-MIT-22c55e?style=flat-square)](LICENSE)
+This project lets you:
+- ingest ArXiv papers by ID or keyword
+- upload local PDF files
+- query the embedded corpus with semantic retrieval
+- rerank top papers for higher precision
+- ask questions through an LLM agent with session memory
+- browse the result from a lightweight frontend
 
-*Paste an Arxiv ID. Upload a PDF. Ask anything — across one paper or fifty.*  
-*No prompt engineering required. The agent figures out what to do.*
+## Tech stack
 
-</div>
+- Backend: FastAPI + Uvicorn
+- LLM: OpenRouter-compatible models
+- Embeddings: SentenceTransformers
+- Vector database: ChromaDB
+- Retrieval: cosine similarity + reranking
+- Frontend: vanilla HTML/CSS/JS
 
----
+## Project structure
 
-## What makes this different
-
-Most RAG demos make you manage the retrieval yourself — pick a paper, ask about it, hope for the best. This one doesn't.
-
-You just ask a question. The agent decides in real time whether to search what's already ingested, fetch a new paper from Arxiv on the fly, summarize something, or answer directly. No `@tool` decorators. No LangChain. Every component is written from scratch.
-
----
-
-## Under the hood
-
-Every query runs through a tight two-step loop:
-
+```txt
+RAG-Arxiv/
+├── backend/
+│   ├── app/
+│   │   ├── __init__.py
+│   │   └── main.py
+│   ├── agent/
+│   │   ├── prompts.py
+│   │   ├── agent_runner.py
+│   │   └── tools/
+│   ├── api/
+│   │   ├── dependencies.py
+│   │   └── routes/
+│   ├── ingestion/
+│   │   ├── arxiv_fetcher.py
+│   │   ├── embedder.py
+│   │   ├── pdf_loader.py
+│   │   └── __init__.py
+│   ├── memory/
+│   │   └── session_store.py
+│   ├── retrieval/
+│   │   ├── reranker.py
+│   │   ├── vectorstore.py
+│   │   └── __init__.py
+│   ├── tests/
+│   │   └── test_config.py
+│   ├── .env.example
+│   ├── config.py
+│   ├── main.py
+│   ├── requirements.txt
+│   └── test.py
+├── frontend/
+│   ├── app.js
+│   ├── index.html
+│   └── style.css
+├── .gitignore
+├── readme.md
+└── LICENSE
 ```
-Your question
-      │
-      ▼
-  Agent Router  (Gemini reads the question → picks a tool)
-      │
-      ├─ search_vectorstore      ChromaDB → cross-encoder rerank → cited answer
-      ├─ fetch_and_ingest_arxiv  download PDF → embed → search → cited answer
-      ├─ summarize_paper         retrieve all chunks → structured summary
-      └─ answer_directly         no retrieval needed → straight answer
-```
 
-**Step 1 — Route.** Gemini reads your query and returns structured JSON naming the right tool and its arguments.
+## Local setup
 
-**Step 2 — Generate.** Retrieved chunks (post-reranking) become context. Gemini writes a cited answer grounded in the paper text.
+### 1) Create environment
 
-That's the whole loop. Simple enough to debug. Powerful enough to handle messy multi-paper workflows.
-
----
-
-## Stack
-
-| Layer | Choice | Why |
-|-------|--------|-----|
-| LLM | Gemini 1.5 Flash | Fast, cheap, solid at structured output |
-| Embeddings | `all-MiniLM-L6-v2` (384d) | Lightweight, accurate enough |
-| Reranker | `ms-marco-TinyBERT-L-2-v2` | Dramatic precision boost at minimal cost |
-| Vectorstore | ChromaDB | Persistent, cosine similarity, zero infra |
-| Backend | FastAPI + Uvicorn | Clean async, auto docs at `/docs` |
-| Frontend | Vanilla HTML/CSS/JS | No build step, fast, zero dependencies |
-| Deploy | Render + Vercel | Free tier friendly |
-
----
-
-## Getting started
-
-**Clone & install**
 ```bash
-git clone https://github.com/krishan1011/RAG-Arxiv.git
 cd RAG-Arxiv/backend
-python -m venv venv
-source venv/bin/activate        # Windows: venv\Scripts\activate
+python -m venv .venv
+# Windows
+.venv\Scripts\activate
+# macOS/Linux
+source .venv/bin/activate
 pip install -r requirements.txt
 ```
 
-**Add your key**
+### 2) Configure environment variables
+
+Copy the example file and fill in your keys:
+
 ```bash
-# backend/.env
-GEMINI_API_KEY=your_gemini_api_key_here
+copy .env.example .env
 ```
 
-**Run**
+Then set values like:
+
+```env
+OPENROUTER_API_KEY=your_openrouter_api_key
+GEMINI_MODEL=openai/gpt-oss-120b:free
+EMBEDDING_MODEL=sentence-transformers/all-MiniLM-L6-v2
+API_HOST=0.0.0.0
+PORT=8000
+ALLOWED_ORIGINS=http://localhost:5500,http://127.0.0.1:5500
+```
+
+### 3) Run the backend
+
 ```bash
 python main.py
-# Backend  →  http://localhost:8000
-# API docs →  http://localhost:8000/docs
 ```
 
-**Open the frontend**
+The API will be available at:
+- http://localhost:8000
+- http://localhost:8000/docs
 
-Open `frontend/index.html` with VS Code Live Server → `http://localhost:5500`
+### 4) Run the frontend
+
+Open the HTML file in the browser or use a local static server:
+
+```bash
+cd ../frontend
+python -m http.server 5500
+```
+
+Then open:
+- http://localhost:5500
+
+## API endpoints
+
+- POST /ingest/pdf
+- POST /ingest/arxiv
+- GET /ingest/list
+- POST /query/
+- POST /query/agent
+- POST /query/session/new
+- GET /session/{session_id}
+- DELETE /session/{session_id}
+- GET /health
+
+## Notes
+
+This app is intentionally lightweight and transparent: no heavy framework, no hidden magic, and the retrieval flow is easy to debug. The project is structured to be easy to extend and deploy.
+
+## License
+
+MIT
 
 ---
 
