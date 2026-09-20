@@ -1,55 +1,68 @@
-# RAG-Arxiv
+# Agentic ArXiv RAG
 
-A FastAPI-based research assistant for ArXiv papers with local vector search, reranking, and an agentic query workflow.
+A local-first research assistant that ingests ArXiv papers, embeds them into a vector store, retrieves the most relevant passages, and answers questions with grounded citations.
 
-## Overview
+## Why this project stands out
 
-This project lets you:
-- ingest ArXiv papers by ID or keyword
-- upload local PDF files
-- query the embedded corpus with semantic retrieval
-- rerank top papers for higher precision
-- ask questions through an LLM agent with session memory
-- browse the result from a lightweight frontend
+Built a retrieval pipeline that narrows the candidate set from 8 semantically similar chunks down to the top 3 reranked results before generating an answer. That gives the system a much cleaner evidence set than plain vector similarity alone and makes each answer traceable to the underlying paper sections.
+
+## Results snapshot
+
+This project is designed around concrete, measurable retrieval behavior. The pipeline is configured and implemented with these verified system metrics:
+
+| Metric | Value |
+|---|---:|
+| Embedding dimension | 384 |
+| Retrieval candidates per query | 8 |
+| Final reranked passages returned | 3 |
+| Chunk size | 500 tokens |
+| Chunk overlap | 100 tokens |
+| Max chat history per session | 10 turns |
+| Duplicate-safe ingestion checks | arXiv ID + chunk ID |
+| Retrieval stages | 2-stage (retrieve → rerank) |
+
+In practical terms, the app does not answer from a broad unfiltered vector dump. It retrieves a shortlist, reranks it, and then answers with the strongest evidence first.
+
+## What I built
+
+- ArXiv ingestion by paper ID or keyword search
+- Local PDF upload ingestion
+- Semantic search over a local Chroma vector store
+- Cross-encoder style reranking for better relevance control
+- Agentic question answering with session memory
+- Lightweight frontend for browsing papers and answers
 
 ## Tech stack
 
 - Backend: FastAPI + Uvicorn
-- LLM: OpenRouter-compatible models
 - Embeddings: SentenceTransformers
-- Vector database: ChromaDB
+- Vector DB: ChromaDB
 - Retrieval: cosine similarity + reranking
-- Frontend: vanilla HTML/CSS/JS
+- LLM layer: OpenRouter-compatible model access
+- Frontend: vanilla HTML, CSS, and JavaScript
 
-## Project structure
+## Architecture
 
 ```txt
 RAG-Arxiv/
 ├── backend/
 │   ├── app/
-│   │   ├── __init__.py
 │   │   └── main.py
 │   ├── agent/
-│   │   ├── prompts.py
 │   │   ├── agent_runner.py
+│   │   ├── prompts.py
 │   │   └── tools/
 │   ├── api/
-│   │   ├── dependencies.py
 │   │   └── routes/
 │   ├── ingestion/
 │   │   ├── arxiv_fetcher.py
 │   │   ├── embedder.py
-│   │   ├── pdf_loader.py
-│   │   └── __init__.py
+│   │   └── pdf_loader.py
 │   ├── memory/
 │   │   └── session_store.py
 │   ├── retrieval/
 │   │   ├── reranker.py
-│   │   ├── vectorstore.py
-│   │   └── __init__.py
-│   ├── tests/
-│   │   └── test_config.py
-│   ├── .env.example
+│   │   └── vectorstore.py
 │   ├── config.py
 │   ├── main.py
 │   ├── requirements.txt
@@ -63,12 +76,26 @@ RAG-Arxiv/
 └── LICENSE
 ```
 
+## Project highlights
+
+### 1) Retrieval that is grounded in evidence
+The system stores metadata such as `arxiv_id`, `title`, `authors`, and `page_number` alongside each chunk. That makes answer citations easy to trace to the exact paper section.
+
+### 2) Duplicate-safe ingestion
+Before adding a paper, the app checks whether the `arxiv_id` is already present. Before adding each chunk, it checks the generated chunk ID. This keeps repeated ingestion runs stable instead of duplicating data.
+
+### 3) Lightweight deployment design
+The embedding model and reranker are initialized lazily, which is helpful for constrained hosting environments and keeps the local prototype easy to run without heavy runtime overhead.
+
+### 4) Simple extension path
+The code is intentionally direct: retrieval logic, ingestion logic, and the agent loop are each separated so it is easy to add new tools, models, or retrieval strategies later.
+
 ## Local setup
 
-### 1) Create environment
+### 1) Create the environment
 
 ```bash
-cd RAG-Arxiv/backend
+cd backend
 python -m venv .venv
 # Windows
 .venv\Scripts\activate
@@ -79,16 +106,16 @@ pip install -r requirements.txt
 
 ### 2) Configure environment variables
 
-Copy the example file and fill in your keys:
+Create a local `.env` file from the example and add your keys:
 
 ```bash
 copy .env.example .env
 ```
 
-Then set values like:
+Example:
 
 ```env
-OPENROUTER_API_KEY=your_openrouter_api_key
+OPENROUTER_API_KEY=your_key_here
 GEMINI_MODEL=openai/gpt-oss-120b:free
 EMBEDDING_MODEL=sentence-transformers/all-MiniLM-L6-v2
 API_HOST=0.0.0.0
@@ -102,37 +129,36 @@ ALLOWED_ORIGINS=http://localhost:5500,http://127.0.0.1:5500
 python main.py
 ```
 
-The API will be available at:
+API endpoints are available at:
 - http://localhost:8000
 - http://localhost:8000/docs
 
 ### 4) Run the frontend
-
-Open the HTML file in the browser or use a local static server:
 
 ```bash
 cd ../frontend
 python -m http.server 5500
 ```
 
-Then open:
-- http://localhost:5500
+Then open: http://localhost:5500
 
-## API endpoints
+## API overview
 
-- POST /ingest/pdf
-- POST /ingest/arxiv
-- GET /ingest/list
-- POST /query/
-- POST /query/agent
-- POST /query/session/new
-- GET /session/{session_id}
-- DELETE /session/{session_id}
-- GET /health
+| Method | Endpoint | Purpose |
+|---|---|---|
+| POST | `/ingest/pdf` | Upload and ingest a local PDF |
+| POST | `/ingest/arxiv` | Ingest by ArXiv ID or keyword |
+| GET | `/ingest/list` | List ingested papers |
+| POST | `/query/` | Retrieve relevant chunks |
+| POST | `/query/agent` | Run agentic Q&A with session memory |
+| POST | `/query/session/new` | Start a new session |
+| GET | `/session/{session_id}` | Fetch session memory |
+| DELETE | `/session/{session_id}` | Clear a session |
+| GET | `/health` | Health check |
 
-## Notes
+## Note on evaluation data
 
-This app is intentionally lightweight and transparent: no heavy framework, no hidden magic, and the retrieval flow is easy to debug. The project is structured to be easy to extend and deploy.
+There is no dedicated evaluation notebook or benchmark report currently checked into this repository, so this README intentionally uses the metrics that are directly defined in the project implementation rather than inventing model-accuracy numbers.
 
 ## License
 
@@ -140,75 +166,6 @@ MIT
 
 ---
 
-## API reference
-
-| Method | Endpoint | |
-|--------|----------|-|
-| `POST` | `/ingest/pdf` | Upload a PDF |
-| `POST` | `/ingest/arxiv` | Ingest by Arxiv ID or keyword |
-| `GET` | `/ingest/list` | List ingested papers |
-| `POST` | `/query/agent` | Agentic query with session memory |
-| `POST` | `/query/` | Plain retrieval, no LLM |
-| `POST` | `/query/session/new` | New session |
-| `GET` | `/session/{id}` | Conversation history |
-| `DELETE` | `/session/{id}` | Clear session |
-| `GET` | `/health` | Health check |
-
----
-
-## Design decisions worth noting
-
-**No frameworks.** Retrieval, chunking, and agent logic are all written directly. Easier to debug, no version conflicts, no magic happening somewhere in a dependency chain.
-
-**Lazy model loading.** Embedding model and reranker initialize on first request, not at startup. This keeps memory under Render's 512MB free-tier limit — a constraint that kills most deployed demos.
-
-**Metadata-rich chunks.** Every chunk carries `arxiv_id`, `title`, `authors`, and `page_number`. Cited answers come for free, no post-processing needed.
-
-**Duplicate-safe ingestion.** Papers are checked by `arxiv_id` before download. Chunks are checked by UUID before embedding. Call ingest multiple times without thinking about it.
-
----
-
-## Project structure
-
-```
-RAG-Arxiv/
-├── backend/
-│   ├── ingestion/
-│   │   ├── pdf_loader.py          PDF parsing + chunking
-│   │   ├── embedder.py            SentenceTransformer singleton
-│   │   └── arxiv_fetcher.py       Arxiv API + PDF downloader
-│   ├── retrieval/
-│   │   ├── vectorstore.py         ChromaDB add / query / list
-│   │   └── reranker.py            Cross-encoder reranking
-│   ├── memory/
-│   │   └── session_store.py       In-memory conversation history
-│   ├── agent/
-│   │   ├── agent_runner.py        Two-step LLM loop
-│   │   ├── prompts.py             System prompts + templates
-│   │   └── tools/
-│   │       ├── vectorstore_tool.py
-│   │       ├── arxiv_tool.py
-│   │       └── summarize_tool.py
-│   └── api/
-│       └── routes/
-│           ├── ingest.py          POST /ingest/*
-│           ├── query.py           POST /query/*
-│           └── session.py         GET | DELETE /session/*
-└── frontend/
-    ├── index.html
-    ├── style.css
-    └── app.js
-```
-
----
-
 <div align="center">
-  Built by <b>Krishan Kumar</b> • 
-  <a href="https://www.linkedin.com/in/krishan1011/" target="_blank">
-    <img src="https://cdn.jsdelivr.net/gh/devicons/devicon/icons/linkedin/linkedin-original.svg" 
-         width="18" 
-         height="18"
-         alt="LinkedIn"
-         style="vertical-align: middle;"/>
-  </a>
+  Built by <b>Krishan Kumar</b>
 </div>
