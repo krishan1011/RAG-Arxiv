@@ -1,4 +1,4 @@
-# Agentic ArXiv RAG
+# PaperPilot (Agentic ArXiv RAG)
 
 A local-first research assistant that ingests ArXiv papers, embeds them into a vector store, retrieves the most relevant passages, and answers questions with grounded citations.
 
@@ -164,8 +164,12 @@ There is no dedicated evaluation notebook or benchmark report currently checked 
 
 MIT
 
+## Acknowledgements
+
+Original baseline created by [Krishan Kumar](https://github.com/krishan1011) ([RAG-Arxiv](https://github.com/krishan1011/RAG-Arxiv)).
+
 ---
 
 <div align="center">
-  Built by <b>Krishan Kumar</b>
+  Maintained by <b>PaperPilot Contributors</b> • Originally built by <b>Krishan Kumar</b>
 </div>
