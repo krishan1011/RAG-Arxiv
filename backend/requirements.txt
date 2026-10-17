@@ -12,7 +12,8 @@ torch
 
 chromadb==0.5.0
 
-openai==1.30.5
+openai>=1.55.3,<2
+httpx>=0.27,<0.29
 
 arxiv==2.1.0
 python-dotenv==1.0.1

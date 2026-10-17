@@ -2,9 +2,10 @@ const isLocal =
   window.location.hostname === "localhost" ||
   window.location.hostname === "127.0.0.1";
 
+// TODO: Configure production URL in Phase 7
 const API = isLocal
   ? "http://127.0.0.1:8000"
-  : "https://agentic-arxiv.onrender.com";
+  : "https://YOUR-PAPERPILOT-API.onrender.com";
 
 let sessionId = null;
 
@@ -278,7 +279,7 @@ function appendMessage(role, text, sources = [], toolUsed = null) {
   const el = document.createElement("div");
   el.className = `message ${role}`;
 
-  const roleLabel = role === "user" ? "YOU" : "ARXIV/RAG";
+  const roleLabel = role === "user" ? "YOU" : "PAPERPILOT";
 
   let sourcesHTML = "";
   if (sources && sources.length > 0) {
@@ -328,8 +329,8 @@ function clearChat() {
       <div class="welcome-icon">
         <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><path d="M2 3h6a4 4 0 014 4v14a3 3 0 00-3-3H2z"/><path d="M22 3h-6a4 4 0 00-4 4v14a3 3 0 013-3h7z"/></svg>
       </div>
-      <p class="welcome-title">Ask anything about your papers.</p>
-      <p class="welcome-sub">Tap ↑ to ingest an Arxiv paper or upload a PDF, then start chatting.</p>
+      <p class="welcome-title">Ask PaperPilot about your papers.</p>
+      <p class="welcome-sub">Use the top panel to fetch an arXiv paper or upload a PDF to begin research queries.</p>
     </div>
   `;
 }

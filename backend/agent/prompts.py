@@ -1,5 +1,5 @@
 AGENT_SYSTEM_PROMPT = """
-You are a research-agent router.
+You are PaperPilot's research-agent router.
 
 Your ONLY task is to choose the correct tool.
 
@@ -87,7 +87,7 @@ Return ONLY JSON.
 
 
 ANSWER_GENERATION_PROMPT = """
-You are a research assistant.
+You are PaperPilot, a research assistant.
 
 Answer the user's question using ONLY the provided context.
 
@@ -115,7 +115,7 @@ Answer:
 
 
 SUMMARIZE_PROMPT = """
-You are a research assistant.
+You are PaperPilot, a research assistant.
 
 Write a concise and accurate summary of the paper.
 

@@ -1,10 +1,12 @@
-# PaperPilot (Agentic ArXiv RAG)
+# PaperPilot
 
-A local-first research assistant that ingests ArXiv papers, embeds them into a vector store, retrieves the most relevant passages, and answers questions with grounded citations.
+![PaperPilot Interface](docs/screenshot.png)
+
+PaperPilot is an intelligent, local-first research copilot designed to explore, ingest, and analyze scientific papers from arXiv and local PDFs. By combining dense semantic search, optional cross-encoder reranking, and an autonomous agent reasoning loop with conversational session memory, PaperPilot produces precise, evidence-grounded answers cited directly to source papers and pages.
 
 ## Why this project stands out
 
-Built a retrieval pipeline that narrows the candidate set from 8 semantically similar chunks down to the top 3 reranked results before generating an answer. That gives the system a much cleaner evidence set than plain vector similarity alone and makes each answer traceable to the underlying paper sections.
+Unlike naive RAG systems that blindly dump unfiltered vector similarity matches into a prompt, PaperPilot structures paper analysis with high precision. Candidate passages are retrieved from an embedded corpus, and when a cross-encoder model is configured (`RERANKER_MODEL`), candidates are dynamically reranked before answer generation. This delivers an accurate, focused evidence set where every answer remains directly traceable to underlying paper sections.
 
 ## Results snapshot
 
@@ -19,32 +21,32 @@ This project is designed around concrete, measurable retrieval behavior. The pip
 | Chunk overlap | 100 tokens |
 | Max chat history per session | 10 turns |
 | Duplicate-safe ingestion checks | arXiv ID + chunk ID |
-| Retrieval stages | 2-stage (retrieve → rerank) |
+| Retrieval stages | 2-stage (dense retrieve → rerank when `RERANKER_MODEL` is configured; default in Phase 5) |
 
-In practical terms, the app does not answer from a broad unfiltered vector dump. It retrieves a shortlist, reranks it, and then answers with the strongest evidence first.
+In practical terms, the app avoids broad, unverified vector dumps. It surfaces relevant passages, applies reranking when enabled, and synthesizes answers backed by concrete evidence.
 
 ## What I built
 
-- ArXiv ingestion by paper ID or keyword search
-- Local PDF upload ingestion
-- Semantic search over a local Chroma vector store
-- Cross-encoder style reranking for better relevance control
-- Agentic question answering with session memory
-- Lightweight frontend for browsing papers and answers
+- **ArXiv Paper Ingestion**: Direct fetching and parsing by arXiv ID or topic keyword.
+- **Local PDF Upload**: Multipart file ingestion with text extraction and layout-aware chunking.
+- **Vector Retrieval**: Local ChromaDB embedding store using SentenceTransformers.
+- **Context Reranking**: Cross-encoder reranking pipeline that executes when `RERANKER_MODEL` is set (to be enabled by default in Phase 5).
+- **Agentic Reasoning Loop**: Autonomous research router that selects appropriate tools and generates answers with conversational memory.
+- **Responsive Dashboard**: Dark-themed, modern interface for browsing papers and interacting with the agent.
 
 ## Tech stack
 
 - Backend: FastAPI + Uvicorn
-- Embeddings: SentenceTransformers
+- Embeddings: SentenceTransformers (`all-MiniLM-L6-v2`)
 - Vector DB: ChromaDB
-- Retrieval: cosine similarity + reranking
+- Retrieval: Cosine similarity + cross-encoder reranking
 - LLM layer: OpenRouter-compatible model access
-- Frontend: vanilla HTML, CSS, and JavaScript
+- Frontend: Vanilla HTML, CSS, and JavaScript
 
 ## Architecture
 
 ```txt
-RAG-Arxiv/
+PaperPilot/
 ├── backend/
 │   ├── app/
 │   │   └── main.py
@@ -71,6 +73,8 @@ RAG-Arxiv/
 │   ├── app.js
 │   ├── index.html
 │   └── style.css
+├── docs/
+│   └── screenshot.png
 ├── .gitignore
 ├── readme.md
 └── LICENSE
@@ -78,7 +82,7 @@ RAG-Arxiv/
 
 ## Project highlights
 
-### 1) Retrieval that is grounded in evidence
+### 1) Retrieval grounded in evidence
 The system stores metadata such as `arxiv_id`, `title`, `authors`, and `page_number` alongside each chunk. That makes answer citations easy to trace to the exact paper section.
 
 ### 2) Duplicate-safe ingestion
@@ -88,7 +92,7 @@ Before adding a paper, the app checks whether the `arxiv_id` is already present.
 The embedding model and reranker are initialized lazily, which is helpful for constrained hosting environments and keeps the local prototype easy to run without heavy runtime overhead.
 
 ### 4) Simple extension path
-The code is intentionally direct: retrieval logic, ingestion logic, and the agent loop are each separated so it is easy to add new tools, models, or retrieval strategies later.
+The code is intentionally modular: retrieval logic, ingestion logic, and the agent loop are each separated so it is easy to add new tools, models, or retrieval strategies later.
 
 ## Local setup
 

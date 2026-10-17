@@ -1,1 +1,1 @@
-"""Application package for the RAG-Arxiv backend."""
+"""Application package for the PaperPilot backend."""

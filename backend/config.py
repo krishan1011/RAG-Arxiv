@@ -32,8 +32,8 @@ TOP_K_RERANKED = 3
 ARXIV_MAX_RESULTS = 3
 MAX_HISTORY_TURNS = 10
 
-API_TITLE = "Agentic Arxiv RAG"
-API_VERSION = "1.0.0"
+API_TITLE = "PaperPilot"
+API_VERSION = "0.1.0"
 API_HOST = _env("API_HOST", "0.0.0.0")
 API_PORT = int(_env("PORT", "8000"))
 
@@ -41,7 +41,7 @@ ALLOWED_ORIGINS = [
     origin.strip()
     for origin in _env(
         "ALLOWED_ORIGINS",
-        "http://localhost:5500,http://127.0.0.1:5500,https://agentic-arxiv.vercel.app",
+        "http://localhost:5500,http://127.0.0.1:5500",
     ).split(",")
     if origin.strip()
 ]

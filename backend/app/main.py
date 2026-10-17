@@ -22,7 +22,7 @@ def create_app() -> FastAPI:
 
     @app.get("/")
     async def root():
-        return {"message": "running"}
+        return {"message": "PaperPilot API running"}
 
     @app.get("/health")
     async def health():
