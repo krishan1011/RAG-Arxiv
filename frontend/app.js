@@ -1,11 +1,4 @@
-const isLocal =
-  window.location.hostname === "localhost" ||
-  window.location.hostname === "127.0.0.1";
-
-// TODO: Configure production URL in Phase 7
-const API = isLocal
-  ? "http://127.0.0.1:8000"
-  : "https://YOUR-PAPERPILOT-API.onrender.com";
+const API = "http://127.0.0.1:8000";
 
 let sessionId = null;
 
@@ -36,11 +29,7 @@ const ingestPanel    = document.getElementById("ingestPanel");
 const ingestOverlay  = document.getElementById("ingestOverlay");
 const closePanelBtn  = document.getElementById("closePanelBtn");
 
-const wakeOverlay    = document.getElementById("wakeOverlay");
-const wakeProgressBar= document.getElementById("wakeProgressBar");
-const wakeTime       = document.getElementById("wakeTime");
 
-let wakeInterval = null;
 
 // ── Ingest Panel ───────────────────────────────────────────
 function openPanel() {
@@ -240,16 +229,11 @@ async function sendQuery() {
   const thinkingEl = appendThinking();
 
   try {
-    const wakeTimeout = setTimeout(showWakeOverlay, 4000);
-
     const res = await fetch(`${API}/query/agent`, {
       method: "POST",
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify({ question, session_id: sessionId }),
     });
-
-    clearTimeout(wakeTimeout);
-    hideWakeOverlay();
 
     const data = await res.json();
     thinkingEl.remove();
@@ -340,25 +324,6 @@ function scrollToBottom() {
   chatMessages.scrollTop = chatMessages.scrollHeight;
 }
 
-function showWakeOverlay() {
-  wakeOverlay.classList.remove("hidden");
-  let seconds = 50;
-  wakeProgressBar.style.width = "0%";
-  wakeTime.textContent = `${seconds}s remaining`;
-  clearInterval(wakeInterval);
-
-  wakeInterval = setInterval(() => {
-    seconds--;
-    wakeProgressBar.style.width = `${((50 - seconds) / 50) * 100}%`;
-    wakeTime.textContent = seconds > 0 ? `${seconds}s remaining` : "Still starting…";
-    if (seconds <= 0) clearInterval(wakeInterval);
-  }, 1000);
-}
-
-function hideWakeOverlay() {
-  wakeOverlay.classList.add("hidden");
-  clearInterval(wakeInterval);
-}
 
 function escapeHTML(str = "") {
   return str
