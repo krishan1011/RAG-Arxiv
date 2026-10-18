@@ -40,7 +40,7 @@ In practical terms, the app avoids broad, unverified vector dumps. It surfaces r
 - Embeddings: SentenceTransformers (`all-MiniLM-L6-v2`)
 - Vector DB: ChromaDB
 - Retrieval: Cosine similarity + cross-encoder reranking
-- LLM layer: OpenRouter-compatible model access
+- LLM layer: Local Ollama (`llama3.2:3b`)
 - Frontend: Vanilla HTML, CSS, and JavaScript
 
 ## Architecture
@@ -119,9 +119,11 @@ copy .env.example .env
 Example:
 
 ```env
-OPENROUTER_API_KEY=your_key_here
-GEMINI_MODEL=openai/gpt-oss-120b:free
+LLM_BASE_URL=http://localhost:11434/v1
+LLM_API_KEY=ollama
+LLM_MODEL=llama3.2:3b
 EMBEDDING_MODEL=sentence-transformers/all-MiniLM-L6-v2
+RERANKER_MODEL=
 API_HOST=0.0.0.0
 PORT=8000
 ALLOWED_ORIGINS=http://localhost:5500,http://127.0.0.1:5500

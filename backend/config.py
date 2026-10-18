@@ -1,5 +1,6 @@
 import os
 from pathlib import Path
+from typing import List, Optional
 
 from dotenv import load_dotenv
 
@@ -12,32 +13,42 @@ def _env(name: str, default: str = "") -> str:
     return value.strip() if isinstance(value, str) else default
 
 
-STORAGE_DIR = BASE_DIR / "storage"
-CHROMA_DIR = STORAGE_DIR / "chroma_db"
+# ── Paths ──────────────────────────────────────────────────────────
+STORAGE_DIR: Path = Path(_env("STORAGE_DIR", str(BASE_DIR / "storage")))
+CHROMA_DIR: Path = STORAGE_DIR / "chroma_db"
+ARXIV_PDFS_DIR: Path = STORAGE_DIR / "arxiv_pdfs"
+
 STORAGE_DIR.mkdir(parents=True, exist_ok=True)
 CHROMA_DIR.mkdir(parents=True, exist_ok=True)
+ARXIV_PDFS_DIR.mkdir(parents=True, exist_ok=True)
 
-OPENROUTER_API_KEY = _env("OPENROUTER_API_KEY", "")
-GEMINI_MODEL = _env("GEMINI_MODEL", "")
-EMBEDDING_MODEL = _env("EMBEDDING_MODEL", "sentence-transformers/all-MiniLM-L6-v2")
+# ── Models ─────────────────────────────────────────────────────────
+LLM_BASE_URL: str = _env("LLM_BASE_URL", "http://localhost:11434/v1")
+LLM_API_KEY: str = _env("LLM_API_KEY", "ollama")
+LLM_MODEL: str = _env("LLM_MODEL", "llama3.2:3b")
 
-EMBEDDING_DIMENSION = 384
-RERANKER_MODEL = _env("RERANKER_MODEL", "") or None
+EMBEDDING_MODEL: str = _env("EMBEDDING_MODEL", "sentence-transformers/all-MiniLM-L6-v2")
+EMBEDDING_DIMENSION: int = 384
+RERANKER_MODEL: Optional[str] = _env("RERANKER_MODEL", "") or None
 
-CHROMA_COLLECTION_NAME = "arxiv_papers"
-CHUNK_SIZE = 500
-CHUNK_OVERLAP = 100
-TOP_K_RETRIEVAL = 8
-TOP_K_RERANKED = 3
-ARXIV_MAX_RESULTS = 3
-MAX_HISTORY_TURNS = 10
+# ── Retrieval ──────────────────────────────────────────────────────
+CHROMA_COLLECTION_NAME: str = "arxiv_papers"
+CHUNK_SIZE: int = 500
+CHUNK_OVERLAP: int = 100
+TOP_K_RETRIEVAL: int = 8
+TOP_K_RERANKED: int = 3
+ARXIV_MAX_RESULTS: int = 3
 
-API_TITLE = "PaperPilot"
-API_VERSION = "0.1.0"
-API_HOST = _env("API_HOST", "0.0.0.0")
-API_PORT = int(_env("PORT", "8000"))
+# ── Agent/session ──────────────────────────────────────────────────
+MAX_HISTORY_TURNS: int = 10
 
-ALLOWED_ORIGINS = [
+# ── Server ─────────────────────────────────────────────────────────
+API_TITLE: str = "PaperPilot"
+API_VERSION: str = "0.1.0"
+API_HOST: str = _env("API_HOST", "0.0.0.0")
+API_PORT: int = int(_env("PORT", "8000"))
+
+ALLOWED_ORIGINS: List[str] = [
     origin.strip()
     for origin in _env(
         "ALLOWED_ORIGINS",
